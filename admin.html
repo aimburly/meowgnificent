@@ -67,6 +67,31 @@ function doLogin() {
 }
 
 function renderDashboard(orders, total) {
+  var rev = 0; orders.forEach(function(o){rev+=parseFloat(o.total)||0;});
+
+  // Fetch analytics
+  fetch("/api/stats",{headers:{"x-admin-key":"meowgnificent2024"}})
+  .then(function(r){return r.json();})
+  .then(function(s){
+    var html='<div class="stats">'+
+      '<div class="stat-card"><div class="n">'+total+'</div><div class="l">Total Orders</div></div>'+
+      '<div class="stat-card"><div class="n">$'+rev.toFixed(2)+'</div><div class="l">Revenue</div></div>'+
+      '<div class="stat-card"><div class="n">'+(s.todayVisits||0)+'</div><div class="l">Today Visitors</div></div>'+
+      '<div class="stat-card"><div class="n">'+(s.totalVisits||0)+'</div><div class="l">All Time Visits</div></div></div>';
+
+    if(!orders.length){
+      html+='<div style="text-align:center;padding:40px;color:#64748B;background:white;border:2px solid #1E293B;border-radius:12px">No orders yet</div>';
+      document.getElementById("dashboard").innerHTML=html;return;
+    }
+    html+='<table><thead><tr><th>Date</th><th>Customer</th><th>Contact</th><th>Products</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+    orders.forEach(function(o){
+      var d=o.created_at?o.created_at.substring(0,10):"-";
+      html+="<tr><td>"+d+'</td><td><b>'+(o.name||"-")+'</b><br><small>'+(o.address||"")+' '+(o.city||"")+' '+(o.state||"")+' '+(o.zip||"")+'</small></td><td>'+(o.email||"")+'<br>'+(o.phone||"")+'</td><td>'+(o.products||"-")+'</td><td><b>$'+(parseFloat(o.total)||0).toFixed(2)+'</b></td><td><span class="badge '+(o.status||"pending")+'">'+(o.status||"pending")+'</span></td></tr>';
+    });
+    html+="</tbody></table>";
+    document.getElementById("dashboard").innerHTML=html;
+  });
+}
   var rev = 0;
   orders.forEach(function(o) { rev += parseFloat(o.total) || 0; });
   var html = '<div class="stats">' +
