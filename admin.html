@@ -52,6 +52,7 @@ function doLogin() {
   var pw = document.getElementById("adminPw").value;
   if (!pw) { showError("Please enter password"); return; }
   document.getElementById("loginError").style.display = "none";
+  document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("dashboard").innerHTML = '<div class="loading">Loading...</div>';
 
   fetch(API, { headers: { "x-admin-key": pw } })
