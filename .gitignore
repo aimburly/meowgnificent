@@ -1,0 +1,10 @@
+﻿node_modules/
+.DS_Store
+*.log
+start-server.bat
+serve.ps1
+server.mjs
+convert-logo.html
+brand_names.py
+profit_calc.py
+*.xlsx
