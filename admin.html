@@ -58,6 +58,69 @@ function login() {
   loadOrders(pw);
 }
 
+
+function renderOrders(orders,total,pw){
+  var rev=0;orders.forEach(function(o){rev+=parseFloat(o.total)||0;});
+  document.getElementById('stats').innerHTML='<div class="stat-card"><div class="n">'+total+'</div><div class="l">Total Orders</div></div><div class="stat-card"><div class="n">(pw) {
+  document.getElementById("ordersTable").innerHTML = '<div class="loading">Loading orders...</div>';
+  document.getElementById("loginError").textContent = "";
+  
+  fetch(API + "/get-orders", {
+    headers: { "x-admin-key": pw }
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error("Wrong password or server error");
+    return r.json();
+  })
+  .then(function(d) {
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    renderOrders(d.orders, d.total, pw);
+  })
+  .catch(function(e) {
+    document.getElementById("loginError").textContent = e.message;
+    document.getElementById("ordersTable").innerHTML = "";
+  });
+}
+</script>
+</body>
+</html>
++rev.toFixed(2)+'</div><div class="l">Total Revenue</div></div><div class="stat-card"><div class="n">'+new Date().toLocaleDateString()+'</div><div class="l">Updated</div></div>';
+  if(!orders.length){document.getElementById('ordersTable').innerHTML='<div style="padding:40px;text-align:center;color:#64748B">No orders</div>';return;}
+  var h='<table><thead><tr><th>Date</th><th>Customer</th><th>Contact</th><th>Products</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+  orders.forEach(function(o){
+    var d=o.created_at?o.created_at.substring(0,10):'-';
+    var s=o.status||'pending';
+    h+='<tr><td>'+d+'</td><td><b>'+(o.name||'-')+'</b><br><small>'+(o.address||'')+' '+(o.city||'')+' '+(o.state||'')+' '+(o.zip||'')+'</small></td><td>'+(o.email||'')+'<br>'+(o.phone||'')+'</td><td>'+(o.products||'-')+'</td><td><b>(pw) {
+  document.getElementById("ordersTable").innerHTML = '<div class="loading">Loading orders...</div>';
+  document.getElementById("loginError").textContent = "";
+  
+  fetch(API + "/get-orders", {
+    headers: { "x-admin-key": pw }
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error("Wrong password or server error");
+    return r.json();
+  })
+  .then(function(d) {
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    renderOrders(d.orders, d.total, pw);
+  })
+  .catch(function(e) {
+    document.getElementById("loginError").textContent = e.message;
+    document.getElementById("ordersTable").innerHTML = "";
+  });
+}
+</script>
+</body>
+</html>
++(parseFloat(o.total)||0).toFixed(2)+'</b></td><td><span class="badge '+s+'">'+s+'</span></td></tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById('ordersTable').innerHTML=h;
+}
+
 function loadOrders(pw) {
   document.getElementById("ordersTable").innerHTML = '<div class="loading">Loading orders...</div>';
   document.getElementById("loginError").textContent = "";
