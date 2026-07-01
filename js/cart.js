@@ -106,3 +106,90 @@ setTimeout(() => {
   updateCartBadge();
   updateCheckoutBtn();
 }, 0);
+
+// === Checkout / PayPal ===
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'checkoutBtn' || e.target.closest('#checkoutBtn')) {
+    if (cart.length === 0) return;
+    showCheckout();
+  }
+});
+
+function showCheckout() {
+  document.getElementById('cartOverlay').style.display = 'none';
+  document.getElementById('checkoutOverlay').style.display = 'flex';
+  document.getElementById('checkoutStatus').textContent = '';
+
+  var html = '';
+  cart.forEach(function(item) {
+    html += '<div style=\"display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F1F5F9;font-size:14px\"><span>' + item.emoji + ' ' + item.name + ' x' + item.qty + '</span><span>\$' + (item.price * item.qty).toFixed(2) + '</span></div>';
+  });
+  document.getElementById('checkoutItems').innerHTML = html;
+  document.getElementById('checkoutTotal').textContent = '\$' + getCartTotal().toFixed(2);
+  renderPayPalButton();
+}
+
+function closeCheckout() {
+  document.getElementById('checkoutOverlay').style.display = 'none';
+}
+
+function renderPayPalButton() {
+  var container = document.getElementById('paypalButtonContainer');
+  container.innerHTML = '';
+  if (typeof paypal === 'undefined') {
+    container.innerHTML = '<p style=\"color:#EF4444;font-size:13px\">PayPal loading failed. Refresh and try again.</p>';
+    return;
+  }
+  paypal.Buttons({
+    createOrder: function(data, actions) {
+      return actions.order.create({
+        purchase_units: [{ amount: { value: getCartTotal().toFixed(2) } }]
+      });
+    },
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(function(details) {
+        submitOrder(details.id);
+      });
+    },
+    onError: function(err) {
+      document.getElementById('checkoutStatus').textContent = 'Payment error: ' + err.message;
+    }
+  }).render('#paypalButtonContainer');
+}
+
+function submitOrder(paypalOrderId) {
+  var name = document.getElementById('coName').value.trim();
+  var email = document.getElementById('coEmail').value.trim();
+  var phone = document.getElementById('coPhone').value.trim();
+  var address = document.getElementById('coAddress').value.trim();
+  var city = document.getElementById('coCity').value.trim();
+  var state = document.getElementById('coState').value.trim();
+  var zip = document.getElementById('coZip').value.trim();
+  if (!name || !email || !phone || !address || !city || !state || !zip) {
+    document.getElementById('checkoutStatus').textContent = 'Please fill in all fields';
+    return;
+  }
+
+  var products = cart.map(function(i) { return i.name + ' x' + i.qty; }).join(', ');
+  var total = getCartTotal().toFixed(2);
+
+  document.getElementById('checkoutStatus').textContent = 'Processing order...';
+  document.getElementById('paypalButtonContainer').innerHTML = '';
+
+  fetch('/api/submit-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name:name, email:email, phone:phone, address:address, city:city, state:state, zip:zip, products:products, total:total, note:'PayPal:'+paypalOrderId })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.success) {
+      document.getElementById('checkoutStatus').textContent = 'Order placed! Thank you!';
+      cart = [];
+      saveCart();
+      setTimeout(function() { closeCheckout(); }, 2000);
+    } else {
+      document.getElementById('checkoutStatus').textContent = 'Order failed: ' + (d.error || 'server error');
+    }
+  }).catch(function(e) {
+    document.getElementById('checkoutStatus').textContent = 'Error: ' + e.message;
+  });
+}
